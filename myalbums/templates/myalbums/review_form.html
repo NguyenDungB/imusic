@@ -31,10 +31,10 @@
                             <hr>
                             <div class="col-xl-9 col-lg-8 col-sm-7">
                             <form action="" method="POST">
-							    {% csrf_token %}   
+							    {% csrf_token %}
 							    <input id="song" type="hidden" name="song_review" value="{{ song.id }}">
 							    <input id="user" type="hidden" name="user_review" value="{{ request.user.id }}">
-							    
+
 							     <h2>Add your review below: </h2>
 							    <strong>Date Review</strong>
 							    {{ form.date_review }}<br><br>

@@ -1,5 +1,5 @@
 from django import forms
-from .models import User, Profile, Lyric,Review
+from .models import User, Profile, Lyric, Review, Song
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib.auth.forms import UserCreationForm
 
@@ -95,8 +95,19 @@ class LyricAddForm(forms.ModelForm):
         model = Lyric
         fields = ['user', 'song', 'content']
 
-
 class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
-        fields = '__all__' 
+        fields = '__all__'
+
+class SongUploadForm(forms.ModelForm):
+    class Meta:
+        model = Song
+        fields = ("title", "category", "thumbnail", "song",)
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super(SongUploadForm, self).__init__(*args, **kwargs)
+
+    def clean_user(self):
+        return self.user

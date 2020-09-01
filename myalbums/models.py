@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import math
 from django.shortcuts import render
 from django.urls import reverse
 from datetime import datetime
@@ -78,9 +79,10 @@ class Song(models.Model):
     album = models.ManyToManyField(
         'Album', help_text='Select album for this song')
     hot = models.BooleanField(default=False)
-    thumbnail = models.ImageField(upload_to="thumbnails", blank=False,default="default.jpeg")
+    thumbnail = models.ImageField(upload_to="thumbnails", blank=False, default="default.jpg")
     song = models.FileField(upload_to="song_directory_path", default="default.mp3")
     playtime = models.CharField(max_length=10, default="0.00")
+    size = models.IntegerField(default=0)
 
     @property
     def duration(self):
@@ -102,9 +104,6 @@ class Song(models.Model):
     def get_lyric(self):
          return Lyric.objects.filter(song=self)
 
-
-
-
 class Artist(models.Model):
     name_artist = models.CharField(max_length=50)
     birthday = models.DateField(null=True, blank=True)
@@ -115,6 +114,16 @@ class Artist(models.Model):
 
     def __str__(self):
         return self.name_artist
+
+    @property
+    def file_size(self):
+        if self.size == 0:
+            return "0B"
+        size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+        i = int(math.floor(math.log(self.size, 1024)))
+        p = math.pow(1024, i)
+        s = round(self.size / p, 2)
+        return "%s %s" % (s, size_name[i])
 
 
 class UserManager(BaseUserManager):
@@ -257,11 +266,11 @@ class Review(models.Model):
     user_review = models.ForeignKey('User', on_delete=models.CASCADE)
     date_review = models.DateTimeField(default=timezone.now)
     RATING_CHOICES = (
-        (1, 'so bad'),
-        (2, 'bad'),
-        (3, 'normal'),
-        (4, 'good'),
-        (5, 'so good'),
+        (1, '★'),
+        (2, '★★'),
+        (3, '★★★'),
+        (4, '★★★★'),
+        (5, '★★★★★'),
     )
     rating = models.IntegerField(choices=RATING_CHOICES)
 
@@ -281,7 +290,6 @@ class Review(models.Model):
         for star in range(5 - self.rating):
             list_of_stars.append(star)
         return list_of_stars
-
 
 
 class Follow(models.Model):

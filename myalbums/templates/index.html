@@ -60,7 +60,7 @@
                                             <div class="custom-card--inline-img">
                                                 <img src="{{ song.thumbnail.url }}" alt="" class="card-img--radius-sm"></div>
                                             <div class="custom-card--inline-desc">
-                                                <p class="text-truncate mb-0">{{ song.title }}</p>
+                                                <a href="{{ song.get_absolute_url }}">{{ song.title }}</a>
                                                 <p class="text-truncate text-muted font-sm">{{ song.artist.all|join:',' }}</p>
                                             </div>
                                         </div>
@@ -127,7 +127,7 @@
                     <hr>
                 </div>
                 <div class="carousel-item-5 arrow-pos-3">
-                    {% for song in latest_songs %}
+                    {% for song in latest_songs_2 %}
                         <div class="custom-card">
                             <div class="custom-card--img">
                                 <div class="custom-card--info">

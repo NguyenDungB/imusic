@@ -1,13 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DetailView, DeleteView, ListView
 from .models import Song, Artist, Category, Album, Review, User, Profile
 # from utils.song_utils import generate_key
-
-from .forms import UserUpdateForm, ProfileUpdateForm, LyricAddForm
+from .forms import UserUpdateForm, ProfileUpdateForm, LyricAddForm, ReviewForm, SongUploadForm
 from .forms import RegisterForm
 from tinytag import TinyTag
 from django.http import  HttpResponseRedirect
@@ -16,15 +17,16 @@ from django.views.generic.list import BaseListView
 from .models import *
 # from utils.song_utils import generate_key
 from .forms import UserUpdateForm, ProfileUpdateForm
-from .forms import RegisterForm, ReviewForm
-from django.shortcuts import  get_object_or_404
+
 
 def index(request):
+    a = Song.objects.all()
     context = {
-        'artists' : Artist.objects.all(),
+        'artists' : Artist.objects.all()[:6],
         'genres': Category.objects.all()[:6],
-        'latest_songs': Song.objects.all()[:6]
-    }  
+        'latest_songs': Song.objects.all(),
+        'latest_songs_2': Song.objects.all(),
+    }
     return render(request, "index.html", context)
 
 
@@ -213,4 +215,70 @@ def ReviewAdd(request, pk):
         if form.is_valid():
             form.save()
             return redirect('song-detail',pk)
-    return render(request, 'myalbums/review_form.html', context)    
+    return render(request, 'myalbums/review_form.html', context)
+
+
+# @login_required
+# def upload(request):
+#     user = request.user
+#     form = SongUploadForm()
+#     context = {
+#         'user': user,
+#         'form': form,
+#     }
+#     if request.method == 'POST':
+#         form = ReviewForm(request.POST, initial={'user': user})
+#         if form.is_valid():
+#             form.save()
+#             return redirect('song')
+#     return render(request, 'myalbums/create.html', context)
+
+
+class SongUploadView(CreateView):
+    form_class = SongUploadForm
+    template_name = "myalbums/create.html"
+
+    @method_decorator(login_required(login_url=reverse_lazy('index')))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(self.request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(SongUploadView, self).get_context_data(**kwargs)
+        context['artists'] = Artist.objects.all()
+        context['category'] = Category.objects.all()
+        return context
+
+
+    def post(self, request, *args, **kwargs):
+
+        form = self.get_form()
+        print(form)
+        if form.is_valid():
+
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        return JsonResponse(form.errors, status=200)
+
+    def form_valid(self, form):
+        song = TinyTag.get(self.request.FILES['song'].file.name)
+        form.instance.playtime = song.duration
+        form.instance.size = song.filesize
+        artists = []
+        for a in self.request.POST.getlist('artists[]'):
+            try:
+                artists.append(int(a))
+            except:
+                artist = Artist.objects.create(name=a)
+                artists.append(artist)
+        form.save()
+        form.instance.artist.set(artists)
+        form.save()
+        data = {
+            'status': True,
+            'message': "Successfully submitted form data.",
+            'redirect': reverse_lazy('song-detail', kwargs={'pk': form.instance.id})
+        }
+        return JsonResponse(data)

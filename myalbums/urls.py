@@ -13,6 +13,7 @@ urlpatterns = [
 	path('song/', SongListView.as_view(), name='song'),
 	path('song/<int:pk>', views.favorite, name='song-detail'),
     path('song/<int:pk>/lyric/', views.addlyric, name='lyric'),
+    path('song/upload', SongUploadView.as_view(), name='upload'),
 	path('artist/', ArtistListView.as_view(), name='artist'),
 	path('artist/<int:pk>', ArtistDetailView.as_view(), name='artist-detail'),
 	path('profile', views.profile, name ='profile'),
@@ -22,6 +23,6 @@ urlpatterns = [
     path('station/', StationListView.as_view(), name='user-list'),
     path('station/<int:pk>', views.follow, name='follow'),
     path('favorite/', views.FavoriteListView.as_view(), name='favorite'),
-	path('review/<int:pk>/create', ReviewAdd, name='review_create'),
+    path('review/<int:pk>/create', ReviewAdd, name='review_create')
 
 ]
