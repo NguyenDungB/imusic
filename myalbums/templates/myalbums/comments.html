@@ -1,0 +1,20 @@
+  <div class="custom-list--item">
+    <div class="text-dark custom-card--inline">
+
+            <div class="custom-card--inline-img">
+                <img src="{{ comment.user.profile.image.url }}" alt="" class="card-img--radius-sm" style="border-radius: 50%;">
+
+            </div>
+             <div style="margin-left:10px;">
+                <strong >{{ comment.user.email}}</strong>
+                <p>{{ comment.date_comment }}</p>
+            </div>
+            <div class="custom-card--inline-desc" style="margin-left:32px;margin-top:8px;">
+                   
+                    <p class="text-truncate mb-0">{{ comment.text  }}</p>
+                    <hr>
+            </div>
+
+    </div>
+
+</div>

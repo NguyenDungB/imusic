@@ -79,7 +79,7 @@
                 </ul>
                 <div class="tab-content" id="artistDetailsContent">
             <div class="tab-pane fade show active" id="song" role="tabpanel" aria-labelledby="song-tab">
-                        <div class="row align-items-end"><span class="col-6 font-weight-bold">{{ favorite.review_set.all.count }} Comment</span>
+                        <div class="row align-items-end count-review"><span class="col-6 font-weight-bold">{{ favorite.review_set.all.count }} Comment</span>
                             <div class="col-12">
                                 <hr>
                             </div>
@@ -97,7 +97,7 @@
                                                 <strong >{{ review.user_review.email}}</strong>
                                                 <p>{{ review.date_review }}</p>
                                             </div>
-                                            <div class="custom-card--inline-desc" style="margin:25px;">
+                                            <div class="custom-card--inline-desc" style="margin-left:32px;margin-top:8px;">
 
                                                     {% for rate in review.actual_rating %}
                                                         <span class="la la-star" style="color : orange"></span>
@@ -114,7 +114,45 @@
                                             </div>
 
                                     </div>
+
                                 </div>
+                                <br>
+                                <div style="margin-left:45px;" class="comments-area">
+                                    {% if review.comment_set %}
+                                        {% for comment in review.comment_set.all %}
+                                      <!--   <div class="custom-list--item">
+                                            <div class="text-dark custom-card--inline">
+
+                                                    <div class="custom-card--inline-img">
+                                                        <img src="{{ comment.user.profile.image.url }}" alt="" class="card-img--radius-sm" style="border-radius: 50%;">
+
+                                                    </div>
+                                                     <div style="margin-left:10px;">
+                                                        <strong >{{ comment.user.email}}</strong>
+                                                        <p>{{ comment.date_comment }}</p>
+                                                    </div>
+                                                    <div class="custom-card--inline-desc" style="margin-left:32px;margin-top:8px;">
+                                                           
+                                                            <p class="text-truncate mb-0">{{ comment.text  }}</p>
+                                                            <hr>
+                                                    </div>
+
+                                            </div>
+
+                                        </div> -->
+                                        {% endfor %}
+                                    {% endif %}
+                                    <div style="margin-left:45px;">
+                                            <!-- form-control btn btn-sm btn-pill btn-air btn-primary   -->
+                                           
+                                             <p>Add your comment below: </p>
+                                            <textarea  class="comment-content"  required rows="2" id="comment_content" type="text" name="text" >
+                                            </textarea>
+                                            <input class="comment-submit" id="" type="submit" value="Add Comment" style="margin: 15px">
+                                      
+                                    </div>
+                                </div>
+                                {{ review.id|json_script:"review-id" }}
                             {% endfor %}
                         </div>
                     </div>
@@ -129,10 +167,90 @@
             </div>
         {% include 'includes/footer.html' %}
     </main>
-
+    {{ favorite.id|json_script:"favorite-id" }}
 {% endblock %}
 
 {% block javascripts %}
+    
+                  <script type="text/javascript">
+
+                    const roomName = JSON.parse(document.getElementById('favorite-id').textContent);
+
+                    const chatSocket = new WebSocket(
+                        'ws://'
+                        + window.location.host
+                        + '/ws/comment/'
+                        + roomName
+                        + '/'
+                    );
+                    console.log(chatSocket)
+                    console.log("hahha")
+
+                    chatSocket.onmessage = function(e) {
+                        const data = JSON.parse(e.data);
+                        const comment = JSON.parse(data.comment);
+                        const htmlRender = data.htmlRender;
+                        renderComment(comment, htmlRender);
+                        console.log("okkkkkkkkkkkk")
+
+                    };
+
+                    chatSocket.onclose = function(e) {
+                        console.error('Chat socket closed unexpectedly');
+                    };
+
+                    const comment_submit = $('.comment-submit');
+
+                    const comment_content = $('.comment-content');
+                    console.log("okok")
+
+                    comment_content.on('keyup', (e) => {
+                        console.log("okcon")
+                        if (e.which == 13) {
+                            comment_submit.click();
+                        }
+                    });
+
+                    comment_submit.on('click', () => {
+                        console.log("oksub")
+                      const content = comment_content.val();
+                      const userId = '{{user.id}}';
+                      if (userId) {
+                          sendComment(content)
+                      }
+                      else {
+                          alert("You must login")
+                      }
+                      comment_content.val("");
+
+                    });
+                    // const reviewid = '{{review.id}}';
+                    const reviewid = JSON.parse(document.getElementById('review-id').textContent);
+
+                    print(reviewid)
+                    function sendComment(content) {
+                        console.log("oksen")
+                      chatSocket.send(JSON.stringify({
+                          'content': content,
+                          'userId': '{{user.id}}',
+                          // 'reviewId': '{{review.id}}'
+                          'reviewId': reviewid
+                      }));
+                    }
+
+                    function renderComment(content, htmlRender) {
+                      console.log("okrender")
+                      var count = parseInt($('.count-review h4 span').text()) + 1
+                      $('.count-review h4 span').text(count)
+
+                      commentArea = $('.comments-area')
+                      commentArea.prepend(`${htmlRender}`)
+                    }
+
+                  </script>
+
+
+
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/amplitudejs@5.0.2/dist/amplitude.min.js"></script>
     <script src="{% static 'js/wavesurfer.min.js' %}"></script>

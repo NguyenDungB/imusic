@@ -4,7 +4,7 @@ import numpy as np
 from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .forms import UserAdminCreationForm, UserAdminChangeForm
-from .models import Song, Artist, Category, Album, Review, User, Profile, Follow, Favorite, Lyric
+from .models import *
 
 
 @admin.register(Song)
@@ -83,5 +83,11 @@ class UserAdmin(BaseUserAdmin):
 admin.site.register(User, UserAdmin)
 
 admin.site.register(Lyric)
+
 # Remove Group Model from admin. We're not using it.
 admin.site.unregister(Group)
+
+admin.site.register(Comment)
+# class CommentAdmin(admin.ModelAdmin):
+#     list_display = ('song_review', 'user_review',
+#                     'content_review', 'date_review', 'rating')

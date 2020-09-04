@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -9,7 +9,7 @@ from django.views.generic import CreateView, DetailView, DeleteView, ListView
 from .models import Song, Artist, Category, Album, Review, User, Profile
 # from utils.song_utils import generate_key
 from .forms import UserUpdateForm, ProfileUpdateForm, LyricAddForm, ReviewForm, SongUploadForm
-from .forms import RegisterForm
+from .forms import RegisterForm, CommentForm
 from tinytag import TinyTag
 from django.http import  HttpResponseRedirect
 from tinytag import TinyTag
@@ -147,6 +147,7 @@ def favorite(request, pk):
     if request.method == 'GET':
         user = request.user
         favorite = get_object_or_404(Song, pk=pk)
+        # review = Review.objects.get(user_review = user , song_review = favorite)
         is_favorite = 0
 
         try:
@@ -160,6 +161,7 @@ def favorite(request, pk):
             'user': user,
             'favorite': favorite,
             'is_favorite': is_favorite,
+            # 'review' : review,
         }
         return render(request, 'myalbums/song_detail.html', context=context)
     elif request.method == 'POST':
@@ -219,19 +221,43 @@ def ReviewAdd(request, pk):
 
 
 # @login_required
-# def upload(request):
+# def CommentAdd(request, pk):
 #     user = request.user
-#     form = SongUploadForm()
+#     # user = form.save(commit=False)
+#     review = get_object_or_404(Review, pk=pk)
+#     form = CommentForm()
 #     context = {
 #         'user': user,
+#         'review': review,
 #         'form': form,
 #     }
 #     if request.method == 'POST':
-#         form = ReviewForm(request.POST, initial={'user': user})
+#         form = CommentForm(request.POST, initial={'review': review})
 #         if form.is_valid():
 #             form.save()
-#             return redirect('song')
-#     return render(request, 'myalbums/create.html', context)
+#             return redirect('song-detail',pk)
+#     return render(request, 'myalbums/song_detail.html', { 'form': form })
+
+
+
+@login_required
+def CommentAdd(request, pk):
+    url = request.META.get('HTTP_REFERER')  # get last url
+    review = get_object_or_404(Review, pk=pk)
+    # comments = review.content.get(review=review)
+    if request.method == 'POST':  # check post
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = Comment()
+            comment.review = review
+            comment.text = form.cleaned_data['text']
+            # return HttpResponse(comment.text)
+            comment.user = request.user
+            comment.save()
+            return HttpResponseRedirect(url)
+    template = 'myalbums/song_detail.html'
+    context = {'form': form}
+    return render(request, template, context)
 
 
 class SongUploadView(CreateView):
