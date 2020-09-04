@@ -97,7 +97,7 @@
                                                 <strong >{{ review.user_review.email}}</strong>
                                                 <p>{{ review.date_review }}</p>
                                             </div>
-                                            <div class="custom-card--inline-desc" style="margin:25px;">
+                                            <div class="custom-card--inline-desc" style="margin-left:32px;margin-top:8px;">
 
                                                     {% for rate in review.actual_rating %}
                                                         <span class="la la-star" style="color : orange"></span>
@@ -113,6 +113,44 @@
 
                                             </div>
 
+                                    </div>
+
+                                </div>
+                                <br>
+                                <div style="margin-left:45px;">
+                                    {% if review.comment_set %}
+                                        {% for comment in review.comment_set.all %}
+                                        <div class="custom-list--item">
+                                            <div class="text-dark custom-card--inline">
+
+                                                    <div class="custom-card--inline-img">
+                                                        <img src="{{ comment.user.profile.image.url }}" alt="" class="card-img--radius-sm" style="border-radius: 50%;">
+
+                                                    </div>
+                                                     <div style="margin-left:10px;">
+                                                        <strong >{{ comment.user.email}}</strong>
+                                                        <p>{{ comment.date_comment }}</p>
+                                                    </div>
+                                                    <div class="custom-card--inline-desc" style="margin-left:32px;margin-top:8px;">
+                                                           
+                                                            <p class="text-truncate mb-0">{{ comment.text  }}</p>
+                                                            <hr>
+                                                    </div>
+
+                                            </div>
+
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <div style="margin-left:45px;">
+                                        <form action="{% url 'AddComment' review.id %}" method="POST">
+                                        {% csrf_token %}
+                                           
+                                             <p>Add your lyric below: </p>
+                                            <textarea  class="form-control"  required rows="2" id="text" type="text" name="text" >
+                                            </textarea>
+                                            <input class="btn btn-sm btn-pill btn-air btn-primary" type="submit" value="Add Comment" style="margin: 15px">
+                                        </form>
                                     </div>
                                 </div>
                             {% endfor %}

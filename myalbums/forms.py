@@ -1,5 +1,5 @@
 from django import forms
-from .models import User, Profile, Lyric, Review, Song
+from .models import User, Profile, Lyric, Review, Song , Comment
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib.auth.forms import UserCreationForm
 
@@ -99,6 +99,11 @@ class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
         fields = '__all__'
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
 
 class SongUploadForm(forms.ModelForm):
     class Meta:
