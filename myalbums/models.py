@@ -82,7 +82,7 @@ class Song(models.Model):
     thumbnail = models.ImageField(upload_to="thumbnails", blank=False, default="default.jpg")
     song = models.FileField(upload_to="song_directory_path", default="default.mp3")
     playtime = models.CharField(max_length=10, default="0.00")
-    # size = models.IntegerField(default=0)
+    size = models.IntegerField(default=0)
 
     @property
     def duration(self):

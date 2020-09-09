@@ -19,11 +19,36 @@ from .models import *
 from .forms import UserUpdateForm, ProfileUpdateForm
 
 
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate
+from django.core.mail import send_mail
+# from .forms import SignupForm
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.encoding import force_bytes, force_text
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.template.loader import render_to_string
+from .tokens import account_activation_token
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import EmailMessage
+from django.shortcuts import  get_object_or_404
+import ssl,smtplib
+import environ
+import os
+# from django.utils.translation import ugettext_lazy as _
+
+env = environ.Env()
+# reading .env file
+environ.Env.read_env()
+
+
 def index(request):
     a = Song.objects.all()
     context = {
         'artists' : Artist.objects.all()[:6],
         'genres': Category.objects.all()[:6],
+        'latest_songs': Song.objects.all(),
+        'latest_songs_2': Song.objects.all(),
         # 'latest_songs': Song.objects.all()[len(a)-3:len(a)],
         # 'latest_songs_2': Song.objects.all()[len(a)-5:len(a)],
     }
@@ -87,11 +112,47 @@ def register(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(password1)
+            user.active = False
+            user.save()
             form.save()
-            return redirect('index') 
+            current_site = get_current_site(request)
+            mail_subject = 'Activate your blog account.'
+            # subject = 'Activate your blog account.'
+            message = render_to_string('registration/acc_active_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                # 'token':account_activation_token.make_token(user),
+                'token': default_token_generator.make_token(user),
+            })
+            to_email = form.cleaned_data.get('email')
+            email = EmailMessage(
+                mail_subject, message, to=[to_email], from_email=settings.EMAIL_HOST_USER
+            )
+            email.content_subtype = "html" 
+            email.send()
+            # send_mail('check', 'hello','nguyen.thi.dungb@sun-asterisk.com',['tran.van.thongb@sun-asterisk.com'],fail_silently=False,)
+            return HttpResponse('Please confirm your email address to complete the registration')
     else:
         form = RegisterForm()
     return render(request, 'registration/register.html', {'form': form})
+
+# user = get_object_or_404(User, pk=uid)
+def activate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    if user is not None and default_token_generator.check_token(user, token):
+        user.active = True
+        user.save()
+        login(request, user)
+        # return redirect('home')
+        return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
+    else:
+        return HttpResponse('Activation link is invalid!')
+
 
 class SearchSongListView(ListView):
     # template_name = 'myalbums/song_detail.html'
@@ -297,7 +358,7 @@ class SongUploadView(CreateView):
             'redirect': reverse_lazy('song-detail', kwargs={'pk': form.instance.id})
         }
 
-        return redirect('song')
+        return JsonResponse(data)   
 
 class ActivityListView(ListView):
     template_name = 'myalbums/activity_list.html'

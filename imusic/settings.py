@@ -10,8 +10,15 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
+import environ
 import os
 from decouple import config
+
+from django.utils.translation import ugettext_lazy as _
+
+env = environ.Env()
+# reading .env file
+environ.Env.read_env()
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -182,4 +189,11 @@ ACCOUNT_EMAIL_REQUIRED=True
 ACCOUNT_USERNAME_REQURIED=True
 
 
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST_USER = 'nguyendungden123@gmail.com'
+EMAIL_HOST_PASSWORD = 'nguyendung123'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
